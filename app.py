@@ -1,6 +1,6 @@
 """
 If you are in the same directory as this file (app.py), you can run run the app using gunicorn:
-    
+
     $ gunicorn --bind 0.0.0.0:<PORT> app:app
 
 gunicorn can be installed via:
@@ -15,9 +15,11 @@ from flask import Flask, jsonify, request, abort
 import sklearn
 import pandas as pd
 import joblib
-
-
+from comet_ml.api import API
+import pickle
 import ift6758
+from features import basic_features, advanced_features, normalize_plays_coords
+
 
 
 LOG_FILE = os.environ.get("FLASK_LOG", "flask.log")
@@ -25,7 +27,7 @@ LOG_FILE = os.environ.get("FLASK_LOG", "flask.log")
 
 app = Flask(__name__)
 
-
+model = None
 @app.before_first_request
 def before_first_request():
     """
@@ -34,6 +36,8 @@ def before_first_request():
     """
     # TODO: setup basic logging configuration
     logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
+    df = pd.read_csv("./data/plays_2015-2020.csv", index_col=False)
+    advanced_df = advanced_features(df)
 
     # TODO: any other initialization before the first request (e.g. load default model)
     pass
@@ -42,11 +46,12 @@ def before_first_request():
 @app.route("/logs", methods=["GET"])
 def logs():
     """Reads data from the log file and returns them as the response"""
-    
-    # TODO: read the log file specified and return the data
-    raise NotImplementedError("TODO: implement this endpoint")
 
-    response = None
+    # TODO: read the log file specified and return the data
+    # raise NotImplementedError("TODO: implement this endpoint")
+    file = open('flask.log', 'r')
+    response = file.read().splitlines()
+    file.close()
     return jsonify(response)  # response must be json serializable!
 
 
@@ -65,29 +70,28 @@ def download_registry_model():
             version: (required),
             ... (other fields if needed) ...
         }
-    
+
     """
+    global model
     # Get POST json data
     json = request.get_json()
     app.logger.info(json)
 
-    # TODO: check to see if the model you are querying for is already downloaded
 
-    # TODO: if yes, load that model and write to the log about the model change.  
-    # eg: app.logger.info(<LOG STRING>)
-    
-    # TODO: if no, try downloading the model: if it succeeds, load that model and write to the log
-    # about the model change. If it fails, write to the log about the failure and keep the 
-    # currently loaded model
+    try:
+        model = pickle.load(open("best-xgb_1.0.0.pkl", "rb"))
+        app.logger.info("model already downloaded")
+    except (OSError, IOError) as e:
+        app.logger.info("model not found...downloading")
+        api = API()
+        api.download_registry_model("zilto", "best-xgb", "1.0.1",
+                            output_path="./", expand=True)
 
-    # Tip: you can implement a "CometMLClient" similar to your App client to abstract all of this
-    # logic and querying of the CometML servers away to keep it clean here
+    model = pickle.load(open("best-xgb_1.0.0.pkl", "rb"))
+    app.logger.info("model downloaded")
+    response = "model loaded"
 
-    raise NotImplementedError("TODO: implement this endpoint")
-
-    response = None
-
-    app.logger.info(response)
+    # app.logger.info(response)
     return jsonify(response)  # response must be json serializable!
 
 
@@ -98,14 +102,21 @@ def predict():
 
     Returns predictions
     """
+    global model
     # Get POST json data
     json = request.get_json()
     app.logger.info(json)
 
     # TODO:
-    raise NotImplementedError("TODO: implement this enpdoint")
-    
-    response = None
+    # raise NotImplementedError("TODO: implement this enpdoint")
+    # model = pickle.load(open("best-xgb_1.0.0.pickle", "rb"))
+    # X_test =
 
-    app.logger.info(response)
+    # response = model.predict_proba(X_test)[::,1]
+    
+    response = {"result":"I am here"}
+    app.logger.info(jsonify(response))
     return jsonify(response)  # response must be json serializable!
+
+# if __name__ == "__main__":
+#     app.run(host='0.0.0.0')
