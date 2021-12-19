@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import logging
 
+from comet_ml.api import API
 
 logger = logging.getLogger(__name__)
 
@@ -50,5 +51,6 @@ class ServingClient:
             model (str): The model in the Comet ML registry to download
             version (str): The model version to download
         """
-
-        raise NotImplementedError("TODO: implement this function")
+        # TODO make sure the model is correctly downloaded, and the appropriate files are cleared
+        API.download_registry_model(workspace=workspace, registry_name=model, version=version)
+        print(f"The model '{model}' was successfully downloaded.")
