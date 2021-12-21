@@ -26,13 +26,18 @@ class GameClient():
              'dist_from_previous', 'rebound','angle_change', 'speed'
             ]
         )
+        self.expected_goal = pd.Series(name="xGoal")
         self.last_play_idx = 0
+        
+        self.period = None
+        self.time_left = None
+        
+        self.home_abbrev = None
+        self.home_team = None
+        self.away_abbrev = None
+        self.away_team = None
     
-    # pass start_year, return a string to select a season (i.e., 2017 -> 20172018)
-    def _start_year_to_season_string(self, start_year):
-        return str(start_year) + str(start_year+1)
-    
-    
+        
     # query API endpoint
     def query_api(self, endpoint, params=None):
         # base url of the API
@@ -45,16 +50,26 @@ class GameClient():
             print(f"Could not reach API endpoint:\n'{url}'")
         return r.json()
     
-        
+           
     # query API for a specific game
     def ping_game(self, gamePk):
+        self.last_ping_at = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
         game_response = self.query_api(f"game/{gamePk}/feed/live")
+        if self.home_team is None:
+            self.home_abbrev = game_response["gameData"]["teams"]["home"]["triCode"]
+            self.home_team = game_response["gameData"]["teams"]["home"]["name"]
+            self.away_abbrev = game_response["gameData"]["teams"]["home"]["triCode"]
+            self.away_team = game_response["gameData"]["teams"]["away"]["name"]     
+        
         plays_list = game_json_to_plays_list(game_response, augment=True, last_play_idx=self.last_play_idx)
         plays_df = pd.DataFrame.from_records(plays_list)
         # checks if new plays happened since last_event_idx
         if not plays_df.empty:
             # if new plays, update last_play_idx
             self.last_play_idx = plays_df.iloc[-1]["event_idx"]
+            self.period = plays_df.iloc[-1]["period_idx"]
+            self.time_left = pd.to_datetime("20:00", format="%M:%S") - pd.to_datetime(plays_df.iloc[-1]["period_time"], format="%M:%S")
+            
             new_features_df = advanced_features(plays_df)
             new_features_df = new_features_df.reindex(columns=self.features_df.columns)
             new_features_df = new_features_df.fillna(0)
