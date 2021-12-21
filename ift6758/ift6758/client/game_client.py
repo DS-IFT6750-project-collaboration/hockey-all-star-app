@@ -16,7 +16,16 @@ class GameClient():
         self.base_url = f"http://{ip}:{port}"
         logger.info(f"Initializing client; base URL: {self.base_url}")
         
-        self.features_df = None
+        self.features_df = pd.DataFrame(columns=
+            ['seconds_elapsed', 'period_idx', 'x_coord', 'y_coord', 'x_coord_norm',
+             'y_coord_norm', 'dist_from_net', 'angle_from_net', 'Backhand',
+             'Deflected', 'Slap Shot', 'Snap Shot', 'Tip-In', 'Wrap-around',
+             'Wrist Shot', 'BLOCKED_SHOT', 'FACEOFF', 'GIVEAWAY', 'GOAL', 'HIT',
+             'MISSED_SHOT', 'OTHER', 'PENALTY', 'PERIOD_START', 'SHOT', 'STOP',
+             'TAKEAWAY', 'previous_x_coord', 'previous_y_coord','seconds_from_previous',
+             'dist_from_previous', 'rebound','angle_change', 'speed'
+            ]
+        )
         self.last_play_idx = 0
     
     # pass start_year, return a string to select a season (i.e., 2017 -> 20172018)
@@ -46,10 +55,7 @@ class GameClient():
         if not plays_df.empty:
             # if new plays, update last_play_idx
             self.last_play_idx = plays_df.iloc[-1]["event_idx"]
-        
-            # if first time computing features, create features dataframe
-            if self.features_df is None:
-                self.features_df = advanced_features(plays_df)
-            # if features dataframe exists, update it
-            else:
-                self.features_df.append(advanced_features(plays_df))
+            new_features_df = advanced_features(plays_df)
+            new_features_df = new_features_df.reindex(columns=self.features_df.columns)
+            new_features_df = new_features_df.fillna(0)
+            self.features_df = self.features_df.append(new_features_df)
