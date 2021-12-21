@@ -18,6 +18,7 @@ import joblib
 from comet_ml.api import API
 import pickle
 import ift6758
+from xgboost import XGBClassifier
 from features import basic_features, advanced_features, normalize_plays_coords
 
 
@@ -36,8 +37,8 @@ def before_first_request():
     """
     # TODO: setup basic logging configuration
     logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
-    df = pd.read_csv("./data/plays_2015-2020.csv", index_col=False)
-    advanced_df = advanced_features(df)
+    # df = pd.read_csv("./data/plays_2015-2020.csv", index_col=False)
+    # advanced_df = advanced_features(df)
 
     # TODO: any other initialization before the first request (e.g. load default model)
     pass
@@ -79,18 +80,19 @@ def download_registry_model():
 
 
     try:
-        model = pickle.load(open("best-xgb_1.0.0.pkl", "rb"))
+        model = XGBClassifier() # or which ever sklearn booster you're are using
+        model.load_model("best_xgb.json")
         app.logger.info("model already downloaded")
+
     except (OSError, IOError) as e:
         app.logger.info("model not found...downloading")
         api = API()
         api.download_registry_model("zilto", "best-xgb", "1.0.1",
                             output_path="./", expand=True)
-
-    model = pickle.load(open("best-xgb_1.0.0.pkl", "rb"))
-    app.logger.info("model downloaded")
+        model = XGBClassifier() # or which ever sklearn booster you're are using
+        model.load_model("best_xgb.json")
+        app.logger.info("model downloaded")
     response = "model loaded"
-
     # app.logger.info(response)
     return jsonify(response)  # response must be json serializable!
 
@@ -110,12 +112,9 @@ def predict():
     # TODO:
     # raise NotImplementedError("TODO: implement this enpdoint")
     # model = pickle.load(open("best-xgb_1.0.0.pickle", "rb"))
-    # X_test =
+    X_test = pd.read_csv('test.csv')
+    response = model.predict_proba(X_test)[::,1]
 
-    # response = model.predict_proba(X_test)[::,1]
-    
-    response = {"result":"I am here"}
-    app.logger.info(jsonify(response))
     return jsonify(response)  # response must be json serializable!
 
 # if __name__ == "__main__":
