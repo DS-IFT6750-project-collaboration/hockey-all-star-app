@@ -23,11 +23,12 @@ ADD run.sh .
 ADD app.py .
 ADD features.py .
 ADD test.csv .
+ADD test_base.csv .
 
 RUN pip install -r requirements.txt
 COPY ift6758 ./ift6758
 RUN pip install -e ift6758/
-#RUN pip install pickle-mixin
+
 
 EXPOSE 6565
 ENTRYPOINT ["./run.sh"]

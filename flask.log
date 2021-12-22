@@ -1,0 +1,15 @@
+INFO:app:Hello
+ERROR:app:Exception on /predict [POST]
+Traceback (most recent call last):
+  File "/opt/anaconda3/envs/DS_project/lib/python3.8/site-packages/flask/app.py", line 2073, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/opt/anaconda3/envs/DS_project/lib/python3.8/site-packages/flask/app.py", line 1518, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/opt/anaconda3/envs/DS_project/lib/python3.8/site-packages/flask/app.py", line 1516, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/opt/anaconda3/envs/DS_project/lib/python3.8/site-packages/flask/app.py", line 1502, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "/Users/henaghonia/Desktop/blog_post/hockey-all-star-app/app.py", line 129, in predict
+    return jsonify(response.to_json())#jsonify(response.to_json(orient="values"))#jsonify(response)  # response must be json serializable!
+AttributeError: 'str' object has no attribute 'dumps'
+INFO:app:Hello

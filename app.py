@@ -19,6 +19,7 @@ from comet_ml.api import API
 import pickle
 import ift6758
 from xgboost import XGBClassifier
+import json
 from features import basic_features, advanced_features, normalize_plays_coords
 
 
@@ -75,14 +76,19 @@ def download_registry_model():
     """
     global model
     # Get POST json data
-    json = request.get_json()
-    app.logger.info(json)
-
-
+    json_ = request.get_json()
+    app.logger.info(json_)
+    str = "default"
+    if json_ == json.loads("base_xgb"):
+        str = "base_xgb.json"
+    else:
+        str = "best_xgb.json"
+    app.logger.info(str)
     try:
         model = XGBClassifier() # or which ever sklearn booster you're are using
-        model.load_model("best_xgb.json")
+        model.load_model(str)
         app.logger.info("model already downloaded")
+
 
     except (OSError, IOError) as e:
         app.logger.info("model not found...downloading")
@@ -90,9 +96,10 @@ def download_registry_model():
         api.download_registry_model("zilto", "best-xgb", "1.0.1",
                             output_path="./", expand=True)
         model = XGBClassifier() # or which ever sklearn booster you're are using
-        model.load_model("best_xgb.json")
+        model.load_model(str)
         app.logger.info("model downloaded")
-    response = "model loaded"
+    app.logger.info(str+"model loaded")
+    response = str+":model loaded"
     # app.logger.info(response)
     return jsonify(response)  # response must be json serializable!
 
@@ -111,11 +118,13 @@ def predict():
 
     # TODO:
     # raise NotImplementedError("TODO: implement this enpdoint")
-    # model = pickle.load(open("best-xgb_1.0.0.pickle", "rb"))
-    X_test = pd.read_csv('test.csv')
-    response = model.predict_proba(X_test)[::,1]
-
-    return jsonify(response)  # response must be json serializable!
+    if json == 'base_xgb':
+        X_test = pd.read_csv('test_base.csv')
+        response = model.predict_proba(X_test)[::,1]
+    else:
+        X_test = pd.read_csv('test.csv')
+        response = model.predict_proba(X_test)[::,1]
+    return jsonify(response.to_list())#jsonify(response.to_json(orient="values"))#jsonify(response)  # response must be json serializable!
 
 # if __name__ == "__main__":
 #     app.run(host='0.0.0.0')
