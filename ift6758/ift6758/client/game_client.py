@@ -6,7 +6,7 @@ import logging
 import pandas as pd
 
 from features import advanced_features
-from plays_model import game_json_to_plays_list, play_json_to_play_dict, augment_with_previous_event 
+from plays_model import game_json_to_plays_list
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class GameClient():
         if self.home_team is None:
             self.home_abbrev = game_response["gameData"]["teams"]["home"]["triCode"]
             self.home_team = game_response["gameData"]["teams"]["home"]["name"]
-            self.away_abbrev = game_response["gameData"]["teams"]["home"]["triCode"]
+            self.away_abbrev = game_response["gameData"]["teams"]["away"]["triCode"]
             self.away_team = game_response["gameData"]["teams"]["away"]["name"]     
         
         plays_list = game_json_to_plays_list(game_response, augment=True, last_play_idx=self.last_play_idx)

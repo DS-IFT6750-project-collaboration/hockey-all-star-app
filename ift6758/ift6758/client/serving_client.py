@@ -52,5 +52,5 @@ class ServingClient:
             version (str): The model version to download
         """
         # TODO make sure the model is correctly downloaded, and the appropriate files are cleared
-        API.download_registry_model(workspace=workspace, registry_name=model, version=version)
-        print(f"The model '{model}' was successfully downloaded.")
+        #API.download_registry_model(workspace=workspace, registry_name=model, version=version)
+        #print(f"The model '{model}' was successfully downloaded.")
