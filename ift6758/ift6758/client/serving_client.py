@@ -28,10 +28,14 @@ class ServingClient:
         Args:
             X (Dataframe): Input dataframe to submit to the prediction service.
         """
-        r = requests.post(
-            self.base_url+"/predict",
-            json=json.loads(X.to_json())
-        )
+
+        try:
+            r = requests.post(
+                self.base_url+"/predict",
+                json=json.loads(X.to_json())
+            )
+        except (JSONDecodeError, IndexError) as e:
+            pass
         logger.info(r.json())
         logger.info(f"Successfully generated predictions")
 
