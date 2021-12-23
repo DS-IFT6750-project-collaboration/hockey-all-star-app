@@ -4,6 +4,7 @@ import time
 import logging
 
 import pandas as pd
+import numpy as np
 
 from features import advanced_features
 from plays_model import game_json_to_plays_list
@@ -26,7 +27,8 @@ class GameClient():
              'dist_from_previous', 'rebound','angle_change', 'speed'
             ]
         )
-        self.expected_goal = pd.Series(name="xGoal")
+        self.plays_team = pd.Series(name="team_initiative_id")
+        self.predictions = pd.Series(name="expected_goal")
         self.last_play_idx = 0
         
         self.period = None
@@ -34,8 +36,10 @@ class GameClient():
         
         self.home_abbrev = None
         self.home_team = None
-        self.away_abbrev = None
+        self.home_xg = 0
+        self.away_abbrev = None        
         self.away_team = None
+        self.away_xg = 0
     
         
     # query API endpoint
@@ -69,8 +73,16 @@ class GameClient():
             self.last_play_idx = plays_df.iloc[-1]["event_idx"]
             self.period = plays_df.iloc[-1]["period_idx"]
             self.time_left = pd.to_datetime("20:00", format="%M:%S") - pd.to_datetime(plays_df.iloc[-1]["period_time"], format="%M:%S")
+            self.plays_team = self.plays_team.append(plays_df["team_initiative_id"])
             
             new_features_df = advanced_features(plays_df)
             new_features_df = new_features_df.reindex(columns=self.features_df.columns)
             new_features_df = new_features_df.fillna(0)
             self.features_df = self.features_df.append(new_features_df)
+            
+    def update_predictions(self):
+        home_plays_idx = np.argwhere(self.plays_team==self.home_abbrev)
+        self.home_xg = np.sum(self.predictions[home_plays_idx])
+        
+        away_plays_idx = np.argwhere(self.plays_team==self.away_abbrev)
+        self.away_xg = np.sum(self.predictions[away_plays_idx])
