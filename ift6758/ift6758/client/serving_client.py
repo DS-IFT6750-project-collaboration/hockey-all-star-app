@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class ServingClient:
-    def __init__(self, ip: str = "0.0.0.0", port: int = 5000, features=None):
+    def __init__(self, ip: str = "serving", port: int = 6565, features=None):
         self.base_url = f"http://{ip}:{port}"
         logger.info(f"Initializing client; base URL: {self.base_url}")
 
@@ -29,7 +29,7 @@ class ServingClient:
             X (Dataframe): Input dataframe to submit to the prediction service.
         """
         r = requests.post(
-            "http://127.0.0.1:5000/predict",
+            self.base_url+"/predict",
             json=json.loads(X.iloc[0:5].to_json())
         )
         logger.info(f"Successfully generated predictions")
@@ -40,7 +40,7 @@ class ServingClient:
     def logs(self) -> dict:
         """Get server logs"""
         r = requests.post(
-            "http://127.0.0.1:5000/download_registry_model",
+            self.base_url+"/logs",
             json= {'workspace': 'zilto', 'model': 'best_xgb', 'version': '1.0.1'}
         )
         logger.info(f"Server logs fetched")
@@ -63,7 +63,7 @@ class ServingClient:
         """
         logger.info(f"downloading the {model}-{version}")
         r = requests.post(
-            "http://127.0.0.1:5000/download_registry_model",
+            self.base_url+"/download_registry_model",
             json= {'workspace': workspace, 'model': model, 'version': version}
         )
         logger.info(f"Successfully downloaded the model")

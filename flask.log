@@ -1,15 +1,32 @@
-INFO:app:Hello
+INFO:app:{'workspace': 'zilto', 'model': 'best-xgb', 'version': '1.0.1'}
+INFO:app:best_xgb.json
+INFO:app:model already downloaded
+INFO:app:best_xgb.jsonmodel loaded
+INFO:app:{'seconds_elapsed': {}, 'period_idx': {}, 'x_coord': {}, 'y_coord': {}, 'x_coord_norm': {}, 'y_coord_norm': {}, 'dist_from_net': {}, 'angle_from_net': {}, 'Backhand': {}, 'Deflected': {}, 'Slap Shot': {}, 'Snap Shot': {}, 'Tip-In': {}, 'Wrap-around': {}, 'Wrist Shot': {}, 'BLOCKED_SHOT': {}, 'FACEOFF': {}, 'GIVEAWAY': {}, 'GOAL': {}, 'HIT': {}, 'MISSED_SHOT': {}, 'OTHER': {}, 'PENALTY': {}, 'PERIOD_START': {}, 'SHOT': {}, 'STOP': {}, 'TAKEAWAY': {}, 'previous_x_coord': {}, 'previous_y_coord': {}, 'seconds_from_previous': {}, 'dist_from_previous': {}, 'rebound': {}, 'angle_change': {}, 'speed': {}}
 ERROR:app:Exception on /predict [POST]
 Traceback (most recent call last):
-  File "/opt/anaconda3/envs/DS_project/lib/python3.8/site-packages/flask/app.py", line 2073, in wsgi_app
+  File "/usr/local/lib/python3.7/site-packages/flask/app.py", line 2073, in wsgi_app
     response = self.full_dispatch_request()
-  File "/opt/anaconda3/envs/DS_project/lib/python3.8/site-packages/flask/app.py", line 1518, in full_dispatch_request
+  File "/usr/local/lib/python3.7/site-packages/flask/app.py", line 1518, in full_dispatch_request
     rv = self.handle_user_exception(e)
-  File "/opt/anaconda3/envs/DS_project/lib/python3.8/site-packages/flask/app.py", line 1516, in full_dispatch_request
+  File "/usr/local/lib/python3.7/site-packages/flask/app.py", line 1516, in full_dispatch_request
     rv = self.dispatch_request()
-  File "/opt/anaconda3/envs/DS_project/lib/python3.8/site-packages/flask/app.py", line 1502, in dispatch_request
+  File "/usr/local/lib/python3.7/site-packages/flask/app.py", line 1502, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
-  File "/Users/henaghonia/Desktop/blog_post/hockey-all-star-app/app.py", line 129, in predict
-    return jsonify(response.to_json())#jsonify(response.to_json(orient="values"))#jsonify(response)  # response must be json serializable!
-AttributeError: 'str' object has no attribute 'dumps'
-INFO:app:Hello
+  File "/code/app.py", line 155, in predict
+    response = model.predict_proba(X)[::,1]
+IndexError: index 1 is out of bounds for axis 1 with size 0
+INFO:app:{'seconds_elapsed': {}, 'period_idx': {}, 'x_coord': {}, 'y_coord': {}, 'x_coord_norm': {}, 'y_coord_norm': {}, 'dist_from_net': {}, 'angle_from_net': {}, 'Backhand': {}, 'Deflected': {}, 'Slap Shot': {}, 'Snap Shot': {}, 'Tip-In': {}, 'Wrap-around': {}, 'Wrist Shot': {}, 'BLOCKED_SHOT': {}, 'FACEOFF': {}, 'GIVEAWAY': {}, 'GOAL': {}, 'HIT': {}, 'MISSED_SHOT': {}, 'OTHER': {}, 'PENALTY': {}, 'PERIOD_START': {}, 'SHOT': {}, 'STOP': {}, 'TAKEAWAY': {}, 'previous_x_coord': {}, 'previous_y_coord': {}, 'seconds_from_previous': {}, 'dist_from_previous': {}, 'rebound': {}, 'angle_change': {}, 'speed': {}}
+ERROR:app:Exception on /predict [POST]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/flask/app.py", line 2073, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.7/site-packages/flask/app.py", line 1518, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.7/site-packages/flask/app.py", line 1516, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.7/site-packages/flask/app.py", line 1502, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "/code/app.py", line 155, in predict
+    response = model.predict_proba(X)[::,1]
+IndexError: index 1 is out of bounds for axis 1 with size 0

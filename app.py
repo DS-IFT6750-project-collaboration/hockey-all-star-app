@@ -20,7 +20,7 @@ import pickle
 import ift6758
 from xgboost import XGBClassifier
 import json
-from features import basic_features, advanced_features, normalize_plays_coords
+
 
 
 
@@ -30,18 +30,35 @@ LOG_FILE = os.environ.get("FLASK_LOG", "flask.log")
 app = Flask(__name__)
 
 model = None
+model_in_use = None
+COMET_API_KEY = None
+
 @app.before_first_request
 def before_first_request():
     """
     Hook to handle any initialization before the first request (e.g. load model,
     setup logging handler, etc.)
     """
+    global COMET_API_KEY
     # TODO: setup basic logging configuration
     logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
     # df = pd.read_csv("./data/plays_2015-2020.csv", index_col=False)
     # advanced_df = advanced_features(df)
+    with open('comet_key.txt', 'r') as file:
+        COMET_API_KEY = file.read().rstrip()
+    with open(LOG_FILE, 'w'):
+        pass
 
-    # TODO: any other initialization before the first request (e.g. load default model)
+    if(os.path.isfile('best_xgb.json')):
+        model = XGBClassifier() # or which ever sklearn booster you're are using
+        model.load_model("best_xgb.json")
+    else:
+    #except (OSError, IOError) as e:
+        api = API(str(COMET_API_KEY))
+
+        api.download_registry_model("zilto", "best-xgb", "1.0.1",output_path="./", expand=True)
+        model = XGBClassifier() # or which ever sklearn booster you're are using
+        model.load_model("best_xgb.json")
     pass
 
 
@@ -75,26 +92,30 @@ def download_registry_model():
 
     """
     global model
+    global model_in_use
+    global COMET_API_KEY
     # Get POST json data
-    json_ = request.get_json()
-    app.logger.info(json_)
-    str = "default"
-    if json_ == json.loads("base_xgb"):
-        str = "base_xgb.json"
-    else:
+    with open('comet_key.txt', 'r') as file:
+        COMET_API_KEY = file.read().rstrip()
+    json = request.get_json()
+    app.logger.info(json)
+    str = "best_xgb.json"
+    model_in_use = json['model']
+    if json['model'] == "best-xgb":
         str = "best_xgb.json"
+    else:
+        str = "base_xgb.json"
     app.logger.info(str)
     try:
         model = XGBClassifier() # or which ever sklearn booster you're are using
         model.load_model(str)
         app.logger.info("model already downloaded")
-
-
     except (OSError, IOError) as e:
         app.logger.info("model not found...downloading")
-        api = API()
-        api.download_registry_model("zilto", "best-xgb", "1.0.1",
-                            output_path="./", expand=True)
+        api = API(str(COMET_API_KEY))
+        # api.download_registry_model("zilto", "best-xgb", "1.0.1",
+        #                     output_path="./", expand=True)
+        api.download_registry_model(json['workspace'], json['model'], json['version'],output_path="./", expand=True)
         model = XGBClassifier() # or which ever sklearn booster you're are using
         model.load_model(str)
         app.logger.info("model downloaded")
@@ -112,19 +133,27 @@ def predict():
     Returns predictions
     """
     global model
+    global model_in_use
     # Get POST json data
     json = request.get_json()
     app.logger.info(json)
 
     # TODO:
-    # raise NotImplementedError("TODO: implement this enpdoint")
-    if json == 'base_xgb':
-        X_test = pd.read_csv('test_base.csv')
-        response = model.predict_proba(X_test)[::,1]
+    if model_in_use == 'base-xgb':
+        # X_test = pd.read_csv('test_base.csv')
+        features = ["angle_from_net", "dist_from_net"]
     else:
-        X_test = pd.read_csv('test.csv')
-        response = model.predict_proba(X_test)[::,1]
-    return jsonify(response.to_list())#jsonify(response.to_json(orient="values"))#jsonify(response)  # response must be json serializable!
+        # X_test = pd.read_csv('test.csv')
+        features = ['seconds_elapsed', 'period_idx', 'x_coord', 'y_coord', 'x_coord_norm',
+       'y_coord_norm', 'dist_from_net', 'angle_from_net', 'Backhand',
+       'Deflected', 'Slap Shot', 'Snap Shot', 'Tip-In', 'Wrap-around',
+       'Wrist Shot', 'BLOCKED_SHOT', 'FACEOFF', 'GIVEAWAY', 'GOAL', 'HIT',
+       'MISSED_SHOT', 'OTHER', 'PENALTY', 'SHOT', 'STOP', 'TAKEAWAY',
+       'previous_x_coord', 'previous_y_coord', 'seconds_from_previous',
+       'dist_from_previous', 'rebound', 'angle_change', 'speed']
+    X = pd.DataFrame(json)[features].drop_duplicates()
+    response = model.predict_proba(X)[::,1]
+    return jsonify(response.to_list())  # response must be json serializable!
 
-# if __name__ == "__main__":
-#     app.run(host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', debug=True)

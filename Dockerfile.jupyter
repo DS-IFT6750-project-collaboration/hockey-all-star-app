@@ -14,19 +14,17 @@ FROM python:3.7
 # Create and cd into /code as your working directory
 WORKDIR /code
 
-ENV COMET_API_KEY=$COMET_API_KEY
-RUN pip install gunicorn
 
 #COPY ./* /code
 ADD requirements.txt .
+RUN pip install -r requirements.txt
+
 ADD app.py .
 ADD runjp.sh .
-ADD features.py .
 
-RUN pip install -r requirements.txt
+
 COPY ift6758 ./ift6758
 RUN pip install -e ift6758/
-#RUN pip install pickle-mixin
 
 EXPOSE 6566
 ENTRYPOINT ["./runjp.sh"]
