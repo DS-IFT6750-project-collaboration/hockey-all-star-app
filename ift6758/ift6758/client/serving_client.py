@@ -30,9 +30,11 @@ class ServingClient:
         """
         r = requests.post(
             self.base_url+"/predict",
-            json=json.loads(X.iloc[0:5].to_json())
+            json=json.loads(X.to_json())
         )
+        logger.info(r.json())
         logger.info(f"Successfully generated predictions")
+
         return r.json()
 
         # raise NotImplementedError("TODO: implement this function")

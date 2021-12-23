@@ -99,28 +99,38 @@ def download_registry_model():
         COMET_API_KEY = file.read().rstrip()
     json = request.get_json()
     app.logger.info(json)
-    str = "best_xgb.json"
     model_in_use = json['model']
     if json['model'] == "best-xgb":
-        str = "best_xgb.json"
+        model_name = "best_xgb.json"
     else:
-        str = "base_xgb.json"
-    app.logger.info(str)
-    try:
-        model = XGBClassifier() # or which ever sklearn booster you're are using
-        model.load_model(str)
-        app.logger.info("model already downloaded")
-    except (OSError, IOError) as e:
-        app.logger.info("model not found...downloading")
-        api = API(str(COMET_API_KEY))
-        # api.download_registry_model("zilto", "best-xgb", "1.0.1",
-        #                     output_path="./", expand=True)
-        api.download_registry_model(json['workspace'], json['model'], json['version'],output_path="./", expand=True)
-        model = XGBClassifier() # or which ever sklearn booster you're are using
-        model.load_model(str)
-        app.logger.info("model downloaded")
-    app.logger.info(str+"model loaded")
-    response = str+":model loaded"
+        model_name = "logistic_angle_dist.sav"
+    app.logger.info(model_name)
+
+    if model_in_use == "best-xgb":
+        if(os.path.isfile('best_xgb.json')):
+            model = XGBClassifier() # or which ever sklearn booster you're are using
+            model.load_model(model_name)
+            app.logger.info("model already downloaded")
+        else:
+            app.logger.info("model not found...downloading")
+            api = API(str(COMET_API_KEY))
+            api.download_registry_model(json['workspace'], json['model'], json['version'],output_path="./", expand=True)
+            model = XGBClassifier() # or which ever sklearn booster you're are using
+            model.load_model(model_name)
+    else:
+        if(os.path.isfile(model_name)):
+            model = pickle.load(open(model_name, 'rb')) # or which ever sklearn booster you're are using
+            app.logger.info(model_name)
+            app.logger.info("model downloaded")
+        else:
+            app.logger.info("model not found...downloading")
+            api = API(str(COMET_API_KEY))
+            api.download_registry_model(json['workspace'], json['model'], json['version'],output_path="./", expand=True)
+            model = pickle.load(open(model_name, 'rb')) # or which ever sklearn booster you're are using
+
+
+    app.logger.info("model loaded")
+    response = model_name+":loaded"
     # app.logger.info(response)
     return jsonify(response)  # response must be json serializable!
 
@@ -137,13 +147,9 @@ def predict():
     # Get POST json data
     json = request.get_json()
     app.logger.info(json)
-
+    app.logger.info(model_in_use)
     # TODO:
-    if model_in_use == 'base-xgb':
-        # X_test = pd.read_csv('test_base.csv')
-        features = ["angle_from_net", "dist_from_net"]
-    else:
-        # X_test = pd.read_csv('test.csv')
+    if model_in_use == "best-xgb":
         features = ['seconds_elapsed', 'period_idx', 'x_coord', 'y_coord', 'x_coord_norm',
        'y_coord_norm', 'dist_from_net', 'angle_from_net', 'Backhand',
        'Deflected', 'Slap Shot', 'Snap Shot', 'Tip-In', 'Wrap-around',
@@ -151,8 +157,13 @@ def predict():
        'MISSED_SHOT', 'OTHER', 'PENALTY', 'SHOT', 'STOP', 'TAKEAWAY',
        'previous_x_coord', 'previous_y_coord', 'seconds_from_previous',
        'dist_from_previous', 'rebound', 'angle_change', 'speed']
+    else:
+       features = ["angle_from_net", "dist_from_net"]
     X = pd.DataFrame(json)[features].drop_duplicates()
-    response = model.predict_proba(X)[::,1]
+
+    response = pd.Series(model.predict_proba(X)[::,1])
+    app.logger.info("Predicted")
+    app.logger.info(response)
     return jsonify(response.to_list())  # response must be json serializable!
 
 if __name__ == "__main__":
