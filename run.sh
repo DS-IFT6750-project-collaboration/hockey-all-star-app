@@ -1,2 +1,2 @@
 #!/bin/bash
-gunicorn --bind 0.0.0.0:6565 app:app
+docker-compose -f docker-compose.yaml up

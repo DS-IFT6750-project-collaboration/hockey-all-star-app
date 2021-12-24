@@ -21,7 +21,7 @@ ADD comet_key.txt .
 RUN pip install -r requirements.txt
 ENV COMET_API_KEY=$COMET_API_KEY
 
-ADD run.sh .
+ADD runj.sh .
 ADD app.py .
 
 COPY ift6758 ./ift6758
@@ -29,7 +29,7 @@ RUN pip install -e ift6758/
 
 
 EXPOSE 6565
-ENTRYPOINT ["./run.sh"]
+ENTRYPOINT ["./runj.sh"]
 
 # The main docker commands you will find useful:
 #

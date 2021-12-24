@@ -31,7 +31,7 @@ app = Flask(__name__)
 
 model = None
 model_in_use = None
-COMET_API_KEY = None
+COMET_API_KEY = os.environ.get("COMET_API_KEY")
 
 @app.before_first_request
 def before_first_request():
@@ -42,10 +42,10 @@ def before_first_request():
     global COMET_API_KEY
     # TODO: setup basic logging configuration
     logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
-    # df = pd.read_csv("./data/plays_2015-2020.csv", index_col=False)
-    # advanced_df = advanced_features(df)
-    with open('comet_key.txt', 'r') as file:
-        COMET_API_KEY = file.read().rstrip()
+
+    # with open('comet_key.txt', 'r') as file:
+    #     COMET_API_KEY = file.read().rstrip()
+    
     with open(LOG_FILE, 'w'):
         pass
 
