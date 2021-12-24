@@ -1,2 +1,2 @@
 #!/bin/bash
-docker-compose -f docker-compose.yaml up
+docker run -it -e 0.0.0.0:5000:5000/tcp --env COMET_API_KEY=$COMET_API_KEY hockeyallstar
